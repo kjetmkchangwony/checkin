@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1F4E79">
+<meta name="robots" content="noindex">
+<title>GBDS Cohort 2 – Co-Trainer Monitoring</title>
+<style>
+  :root { --navy: #1F4E79; --ink: #1d2433; --muted: #5b6474; --line: #d9dee7; --bg: #f5f7fa;
+          --ok: #1e6b34; --okbg: #e3f2e7; --warn: #8a5a00; --warnbg: #fff3d6; --err: #b3261e; --errbg: #fdecea; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--ink); font-size: 16px; }
+  header { background: var(--navy); color: #fff; padding: 14px 16px; }
+  header h1 { margin: 0; font-size: 18px; }
+  header p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
+  main { padding: 16px; max-width: 640px; margin: 0 auto; padding-bottom: 40px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6px; }
+  select, input, textarea { width: 100%; font: inherit; font-size: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+  textarea { min-height: 84px; resize: vertical; }
+  .seg { display: flex; gap: 6px; }
+  .seg button { flex: 1; padding: 12px 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 14px; color: var(--ink); }
+  .seg button.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn { display: block; width: 100%; padding: 14px; border: 0; border-radius: 8px; background: var(--navy); color: #fff; font-size: 16px; font-weight: bold; margin-top: 16px; }
+  .btn:disabled { opacity: .6; }
+  .msg { padding: 10px 12px; border-radius: 8px; margin: 12px 0 0; font-size: 14px; }
+  .msg.err { background: var(--errbg); color: var(--err); }
+  .msg.ok { background: var(--okbg); color: var(--ok); }
+  .msg.warn { background: var(--warnbg); color: var(--warn); }
+  .msg button { margin-top: 8px; padding: 8px 12px; border-radius: 6px; border: 1px solid currentColor; background: #fff; color: inherit; font-size: 14px; }
+  .msg ul { margin: 6px 0 0; padding-left: 18px; }
+  .msg a { color: inherit; font-weight: bold; }
+  .bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .bar a { color: var(--navy); white-space: nowrap; }
+  .hint { font-size: 13px; color: var(--muted); }
+  .ver { font-size: 12px; text-align: center; margin-top: 24px; }
+  .info { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin-bottom: 12px; }
+  .info span { color: var(--muted); }
+  .card { width: 100%; text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 12px; margin-bottom: 10px;
+          display: flex; justify-content: space-between; gap: 10px; align-items: center; font: inherit; color: inherit; }
+  .card .n { font-weight: bold; font-size: 16px; }
+  .card .d { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .chip { font-size: 12px; padding: 4px 8px; border-radius: 12px; white-space: nowrap; }
+  .chip.sent { background: var(--okbg); color: var(--ok); }
+  .chip.not { background: #eef1f5; color: var(--muted); }
+  .chip.draft { background: var(--warnbg); color: var(--warn); }
+  .savebar { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+             margin: -16px -16px 12px; padding: 10px 16px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .savebar a { color: var(--navy); white-space: nowrap; }
+  #part h2 { margin: 4px 0 2px; font-size: 20px; }
+  .box { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 4px 12px 14px; margin-top: 12px; }
+  .box h3 { margin: 12px 0 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .fld { margin-top: 14px; }
+  .fld .q { display: block; margin: 0 0 6px; font-size: 15px; font-weight: bold; color: var(--ink); }
+  .fld .h { margin: -2px 0 6px; font-size: 13px; color: var(--muted); }
+  .fld.bad input, .fld.bad textarea, .fld.bad .seg button { border-color: var(--err); }
+  .optl { font-weight: normal; color: var(--muted); font-size: 13px; }
+  .it { padding: 12px 0; border-top: 1px solid #eef1f5; }
+  .it:first-of-type { border-top: 0; }
+  .it .t { font-size: 15px; margin-bottom: 8px; }
+  .it .t b { display: inline-block; min-width: 34px; color: var(--navy); }
+  .it.bad .t { color: var(--err); }
+  .rate { display: flex; gap: 6px; }
+  .rate button { flex: 1; padding: 10px 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 14px; color: var(--ink); }
+  .rate button.on[data-v="Yes"] { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .rate button.on[data-v="Partly"] { background: #b7791f; border-color: #b7791f; color: #fff; }
+  .rate button.on[data-v="No"] { background: var(--err); border-color: var(--err); color: #fff; }
+  .count { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .chk { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 15px; font-weight: bold; color: var(--ink); margin: 0; }
+  .chk input { flex: none; width: 20px; height: 20px; margin: 1px 0 0; padding: 0; }
+  .need { color: var(--err); font-weight: bold; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="hdr">GBDS Cohort 2 – Co-Trainer Monitoring</h1>
+  <p id="sub">BDS Training – Daily Monitoring Tool</p>
+</header>
+<main>
+  <section id="start">
+    <label for="cluster">Cluster being trained</label>
+    <select id="cluster"></select>
+    <label for="pin">Cluster PIN (co-trainer)</label>
+    <input id="pin" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="6 digits">
+    <label for="name">Your name (co-trainer)</label>
+    <input id="name" autocomplete="name" placeholder="Full name">
+    <label>Training day</label>
+    <div class="seg" id="days"></div>
+    <button class="btn" id="open" type="button">Open</button>
+    <div id="startMsg"></div>
+    <p class="hint ver" id="ver"></p>
+  </section>
+
+  <section id="main" class="hidden">
+    <div class="bar"><span id="where"></span><a href="#" id="change">Change</a></div>
+    <div class="info" id="info"></div>
+    <p class="hint">Fill each part at its time: <b>Start</b> at 8:00 am, <b>Lunch</b> at 1:00 pm, <b>Close</b> at 5:00 pm with the end-of-day summary. Record facts (numbers, times, names), not opinions.</p>
+    <div id="flash"></div>
+    <div id="cards"></div>
+    <p class="hint">Urgent issue that cannot wait for the form? Phone the Director of Training as well.</p>
+    <p class="hint ver" id="ver2"></p>
+  </section>
+
+  <section id="part" class="hidden">
+    <div class="savebar"><a href="#" id="pBack">&larr; Back</a><span id="pSave"></span><span></span></div>
+    <h2 id="pTitle"></h2>
+    <p class="hint" id="pMeta"></p>
+    <div id="pBody"></div>
+    <div id="pMsg"></div>
+    <button class="btn" id="pSend" type="button">Send</button>
+    <p class="hint ver" id="ver3"></p>
+  </section>
+</main>
+
+<script>window.BOOT = {"api":"https://script.google.com/macros/s/AKfycbzUM12zJXKzvnLddn5_SkqBtAEu_TCqyiYryELZtPbNKeLOcZ9uUC7s3iX78N2wz1JNcg/exec","standalone":true};</script>
+<script>
+(function () {
+  var B = window.BOOT || {};
+  var S = { cluster: '', pin: '', name: '', day: 0, parts: {}, carry: {}, route: '', busy: false };
+  var P = null;      // the part being filled: { def, data, sent }
+  var PAGE_VERSION = '1.0.0';
+  var RATINGS = ['Yes', 'Partly', 'No'];
+
+  function $(id) { return document.getElementById(id); }
+  function each(list, fn) { Array.prototype.forEach.call(list, fn); }
+  function store(k, v) { try { if (v) localStorage.setItem('gbdsmon_' + k, v); else localStorage.removeItem('gbdsmon_' + k); } catch (e) { /* storage unavailable */ } }
+  function load(k) { try { return localStorage.getItem('gbdsmon_' + k) || ''; } catch (e) { return ''; } }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  }
+  function msgHtml(kind, text) { return text ? '<div class="msg ' + kind + '">' + esc(text) + '</div>' : ''; }
+  function msg(id, kind, text) { $(id).innerHTML = msgHtml(kind, text); }
+
+  // Two routes to the script: a plain POST to the /exec link (works in browsers signed in to several Google
+  // accounts), or google.script.run when the page is served by Google. Opening tries POST first.
+  function viaPost(fn, args) {
+    return fetch(B.api, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), credentials: 'omit', cache: 'no-store', redirect: 'follow' })
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function (r) { if (!r || typeof r !== 'object') throw new Error('Unexpected reply'); return r; });
+  }
+  function viaRun(fn, args, ok, fail) {
+    try { var r = google.script.run.withSuccessHandler(ok).withFailureHandler(function (e) { fail(e); }); r[fn].apply(r, args); } catch (e) { fail(e); }
+  }
+  function friendly(e) {
+    var m = String(e && e.message ? e.message : e);
+    if (/PERMISSION_DENIED|reading from storage|Authorization is required|multiple accounts/i.test(m)) return 'This browser is signed in to more than one Google account, and Google blocks the page. Open the link in a private (incognito) window.';
+    if (/Failed to fetch|NetworkError|Load failed|network/i.test(m)) return 'Could not reach the system. Check the internet connection and try again.';
+    if (/^HTTP \d|Unexpected (reply|token|end)|JSON/i.test(m)) return 'The system did not answer properly (' + m + '). Try again; if it keeps happening, tell the Director of Training.';
+    return m;
+  }
+  function call(fn, args, ok, fail) {
+    var done = function (r) { setTimeout(function () { ok(r); }, 0); };
+    var failed = function (e) { fail(friendly(e)); };
+    if (B.standalone) return viaPost(fn, args).then(done, failed);
+    var probe = fn === 'monUnlock';
+    var route = probe ? '' : (S.route || (B.api ? 'post' : 'run'));
+    if (route === 'run' || ((probe || !route) && !(B.api && window.fetch))) { if (probe) S.route = 'run'; return viaRun(fn, args, done, failed); }
+    if (route === 'post') return viaPost(fn, args).then(done, failed);
+    viaPost(fn, args).then(function (r) { S.route = 'post'; done(r); }, function () { S.route = 'run'; viaRun(fn, args, done, failed); });
+  }
+
+  // ---------- start ----------
+  function showVersion() { var t = 'Co-trainer page ' + PAGE_VERSION + (B.version ? ' · system ' + B.version : ''); $('ver').textContent = t; $('ver2').textContent = t; $('ver3').textContent = t; }
+  showVersion();
+  function urlCluster() {
+    var m = /[?&]c=([^&#]*)/.exec(window.location.search || '');
+    try { return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : ''; } catch (e) { return ''; }
+  }
+  function fillStart() {
+    $('cluster').innerHTML = '<option value="">Choose your cluster</option>' + B.clusters.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
+    var want = B.cluster || urlCluster() || load('cluster');
+    $('cluster').value = B.clusters.indexOf(want) >= 0 ? want : '';
+    $('days').innerHTML = B.days.map(function (d, i) { return '<button type="button" data-v="' + (i + 1) + '">' + esc(d) + '</button>'; }).join('');
+    each($('days').querySelectorAll('button'), function (b) {
+      b.onclick = function () { each($('days').querySelectorAll('button'), function (x) { x.className = x === b ? 'on' : ''; }); S.day = Number(b.getAttribute('data-v')); };
+    });
+    $('open').disabled = false;
+    msg('startMsg', '', '');
+  }
+  function boot() {
+    $('cluster').innerHTML = '<option value="">Loading clusters…</option>';
+    $('open').disabled = true;
+    msg('startMsg', 'warn', 'Connecting…');
+    call('monBoot', [], function (r) {
+      if (!r || !r.ok || !r.clusters) return bootFailed((r && r.message) || 'The cluster list could not be loaded.');
+      B.clusters = r.clusters; B.days = r.days; B.parts = r.parts; B.version = r.version || '';
+      showVersion(); fillStart();
+    }, bootFailed);
+  }
+  function bootFailed(text) {
+    $('cluster').innerHTML = '<option value="">Not loaded</option>';
+    $('startMsg').innerHTML = msgHtml('err', text);
+    $('startMsg').firstChild.insertAdjacentHTML('beforeend', '<br><button type="button" id="retry">Try again</button>');
+    $('retry').onclick = boot;
+  }
+  $('name').value = load('name');
+  if (B.clusters && B.days && B.parts) fillStart(); else boot();
+
+  $('open').onclick = function () {
+    var c = $('cluster').value, p = $('pin').value.trim(), n = $('name').value.trim();
+    if (!c) return msg('startMsg', 'err', 'Choose your cluster.');
+    if (!/^\d{6}$/.test(p)) return msg('startMsg', 'err', 'Enter the 6-digit cluster PIN.');
+    if (n.split(/\s+/).filter(Boolean).length < 2) return msg('startMsg', 'err', 'Enter your full name.');
+    if (!S.day) return msg('startMsg', 'err', 'Choose the training day.');
+    msg('startMsg', 'warn', 'Opening…');
+    $('open').disabled = true;
+    call('monUnlock', [c, p, S.day], function (r) {
+      $('open').disabled = false;
+      if (!r || !r.ok) return msg('startMsg', 'err', (r && r.message) || 'Could not open.');
+      S.cluster = c; S.pin = p; S.name = n; S.parts = r.parts; S.carry = r.carry || {};
+      store('cluster', c); store('name', n);
+      msg('startMsg', '', '');
+      $('start').classList.add('hidden'); $('main').classList.remove('hidden');
+      $('where').textContent = c + ' · Day ' + S.day;
+      $('sub').textContent = 'Day ' + S.day + ' · ' + n;
+      $('info').innerHTML = '<span>County:</span> ' + esc(r.county) + ' · <span>Value chain:</span> ' + esc(r.valueChain);
+      renderMain();
+    }, function (e) { $('open').disabled = false; msg('startMsg', 'err', e); });
+  };
+  $('change').onclick = function (ev) { ev.preventDefault(); $('main').classList.add('hidden'); $('start').classList.remove('hidden'); msg('flash', '', ''); };
+
+  // ---------- the three parts ----------
+  function draftKey(id) { return 'draft|' + S.cluster + '|' + S.day + '|' + id; }
+  function renderMain() {
+    $('cards').innerHTML = B.parts.map(function (p) {
+      var s = S.parts[p.id] || {}, sent = s.state && s.state !== 'Not sent', draft = !!load(draftKey(p.id));
+      var line = sent ? (s.state === 'Sent again' ? 'Sent again ' : 'Sent ') + esc(s.at) + ' by ' + esc(s.by) : 'Not sent yet';
+      if (draft) line += ' · changes kept on this phone, not sent';
+      var chip = draft ? '<span class="chip draft">Not sent</span>' : sent ? '<span class="chip sent">Sent ✓</span>' : '<span class="chip not">To do</span>';
+      return '<button type="button" class="card" data-p="' + p.id + '"><div><div class="n">' + esc(p.name) + '</div><div class="d">' + esc(p.time) + ' · ' + line + '</div></div>' + chip + '</button>';
+    }).join('');
+    each($('cards').querySelectorAll('.card'), function (b) { b.onclick = function () { openPart(b.getAttribute('data-p')); }; });
+  }
+
+  function partDef(id) { return B.parts.filter(function (p) { return p.id === id; })[0]; }
+  function allFields(def) { return def.fields.concat(def.after); }
+
+  function openPart(id) {
+    var def = partDef(id), s = S.parts[id] || {}, data = null;
+    try { data = JSON.parse(load(draftKey(id)) || 'null'); } catch (e) { data = null; }
+    var restored = !!data;
+    if (!data) data = s.data ? JSON.parse(JSON.stringify(s.data)) : {};
+    data.items = data.items || {};
+    def.fields.forEach(function (f) { if (f.carry && !data[f.key] && S.carry[f.key]) data[f.key] = S.carry[f.key]; });
+    P = { def: def, data: data, sent: s.state && s.state !== 'Not sent', touched: {}, showAll: false };
+    $('main').classList.add('hidden'); $('part').classList.remove('hidden');
+    $('pTitle').textContent = def.name + ' (' + def.time + ')';
+    $('pMeta').textContent = S.cluster + ' · Day ' + S.day + (P.sent ? ' · sent ' + s.at + ' by ' + s.by + '. Change anything below and send it again.' : '');
+    $('pSend').textContent = P.sent ? 'Send the corrected ' + def.short + ' part' : 'Send the ' + def.short + ' part';
+    $('pSend').disabled = false;
+    renderPart();
+    msg('pMsg', restored ? 'warn' : '', restored ? 'Your unsent answers on this phone were put back.' : '');
+    window.scrollTo(0, 0);
+    if (B.standalone && window.history && history.pushState) { try { history.pushState({ mon: 1 }, ''); P.pushed = true; } catch (e) { /* not available */ } }
+  }
+
+  function fieldHtml(f) {
+    var v = P.data[f.key], id = 'f_' + f.key;
+    var lab = esc(f.label) + (f.req === false ? ' <span class="optl">(optional)</span>' : '');
+    var help = f.help ? '<p class="h">' + esc(f.help) + '</p>' : '';
+    var head = f.heading ? '</div><div class="box"><h3>' + esc(f.heading) + '</h3>' : '';
+    if (f.kind === 'confirm') return head + '<div class="fld" id="w_' + f.key + '"><label class="chk"><input type="checkbox" id="' + id + '" data-k="' + f.key + '"' + (v === true ? ' checked' : '') + '><span>' + esc(f.label) + '</span></label></div>';
+    if (f.kind === 'scale') return head + '<div class="fld" id="w_' + f.key + '"><div class="q">' + lab + '</div>' + help + '<div class="seg" data-k="' + f.key + '">' +
+      ['1', '2', '3', '4', '5'].map(function (n) { return '<button type="button" data-v="' + n + '"' + (String(v) === n ? ' class="on"' : '') + '>' + n + '</button>'; }).join('') + '</div></div>';
+    var input = f.kind === 'para' ? '<textarea id="' + id + '" data-k="' + f.key + '" rows="3">' + esc(v) + '</textarea>'
+      : '<input id="' + id + '" data-k="' + f.key + '" autocomplete="off"' + (f.kind === 'whole' ? ' inputmode="numeric" maxlength="3"' : '') + (f.kind === 'time' ? ' type="time"' : '') + ' value="' + esc(v) + '">';
+    return head + '<div class="fld" id="w_' + f.key + '"><label class="q" for="' + id + '">' + lab + '</label>' + help + input + '</div>';
+  }
+
+  function renderPart() {
+    var def = P.def, d = P.data;
+    var h = '<div class="box">' + def.fields.map(fieldHtml).join('') + '</div>';
+    h += '<div class="box"><h3>Rate each item: Yes, Partly or No</h3>' + def.items.map(function (it) {
+      return '<div class="it" id="it_' + it[0].replace('.', '_') + '"><div class="t"><b>' + esc(it[0]) + '</b>' + esc(it[1]) + '</div><div class="rate">' +
+        RATINGS.map(function (r) { return '<button type="button" data-it="' + esc(it[0]) + '" data-v="' + r + '"' + (d.items[it[0]] === r ? ' class="on"' : '') + '>' + r + '</button>'; }).join('') + '</div></div>';
+    }).join('') + '<div class="count" id="count"></div>' +
+      '<div class="fld" id="w_comments"><label class="q" for="f_comments">Comments / evidence <span id="needC"></span></label>' +
+      '<p class="h">Needed for every Partly or No. Start with the item number, e.g. "1.4 – projector bulb failed, used flipcharts".</p>' +
+      '<textarea id="f_comments" data-k="comments" rows="3">' + esc(d.comments) + '</textarea></div></div>';
+    if (def.after.length) h += '<div class="box">' + def.after.map(fieldHtml).join('') + '</div>';
+    h += '<div class="box"><div class="fld" id="w_urgent"><div class="q">Urgent issue for the Director of Training?</div>' +
+      '<p class="h">Answer Yes only for something the Director must deal with today. The Director is emailed at once.</p>' +
+      '<div class="seg" data-k="urgent">' + ['No', 'Yes'].map(function (x) { return '<button type="button" data-v="' + x + '"' + (d.urgent === x ? ' class="on"' : '') + '>' + x + '</button>'; }).join('') + '</div></div>' +
+      '<div class="fld' + (d.urgent === 'Yes' ? '' : ' hidden') + '" id="w_urgentText"><label class="q" for="f_urgentText">Describe the urgent issue</label>' +
+      '<textarea id="f_urgentText" data-k="urgentText" rows="3">' + esc(d.urgentText) + '</textarea></div></div>';
+    $('pBody').innerHTML = h.replace(/<div class="box"><\/div>/g, '');
+    updateCount();
+    saveStatus();
+  }
+
+  function weakItems() { return P.def.items.filter(function (it) { var r = P.data.items[it[0]]; return r === 'Partly' || r === 'No'; }).map(function (it) { return it[0]; }); }
+  function updateCount() {
+    var n = P.def.items.filter(function (it) { return P.data.items[it[0]]; }).length, weak = weakItems();
+    $('count').textContent = n + ' of ' + P.def.items.length + ' items rated' + (weak.length ? ' · Partly or No: ' + weak.join(', ') : '');
+    $('needC').innerHTML = weak.length ? '<span class="need">– needed for ' + esc(weak.join(', ')) + '</span>' : '<span class="optl">(only if any Partly or No)</span>';
+  }
+  function keep() { store(draftKey(P.def.id), JSON.stringify(P.data)); saveStatus(); }
+  function saveStatus() { $('pSave').textContent = load(draftKey(P.def.id)) ? 'Kept on this phone – not sent yet' : (P.sent ? 'Sent' : 'Nothing entered yet'); }
+
+  $('pBody').addEventListener('input', function (ev) {
+    var k = ev.target.getAttribute('data-k');
+    if (!k || !P) return;
+    P.data[k] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;
+    clearBad(k);
+    keep();
+  });
+  $('pBody').addEventListener('change', function (ev) {
+    var k = ev.target.getAttribute('data-k');
+    if (!k || !P || ev.target.type !== 'checkbox') return;
+    P.data[k] = ev.target.checked; clearBad(k); keep();
+  });
+  $('pBody').addEventListener('click', function (ev) {
+    if (!P || !ev.target.closest) return;
+    var b = ev.target.closest('button[data-v]');
+    if (!b) return;
+    var it = b.getAttribute('data-it');
+    if (it) {
+      P.data.items[it] = b.getAttribute('data-v');
+      each(b.parentNode.querySelectorAll('button'), function (x) { x.className = x === b ? 'on' : ''; });
+      var row = $('it_' + it.replace('.', '_')); if (row) row.classList.remove('bad');
+      updateCount(); clearBad('items'); keep();
+      return;
+    }
+    var seg = b.parentNode, k = seg.getAttribute('data-k');
+    if (!k) return;
+    P.data[k] = b.getAttribute('data-v');
+    each(seg.querySelectorAll('button'), function (x) { x.className = x === b ? 'on' : ''; });
+    if (k === 'urgent') $('w_urgentText').classList.toggle('hidden', P.data.urgent !== 'Yes');
+    clearBad(k); keep();
+  });
+  function clearBad(k) { var w = $('w_' + k); if (w) w.classList.remove('bad'); if (P.showAll) showProblems(problems(), false); }
+
+  // ---------- checks (the system makes the same ones) ----------
+  function problems() {
+    var out = [], d = P.data;
+    function bad(key, text) { out.push({ key: key, message: text }); }
+    allFields(P.def).forEach(function (f) {
+      var v = d[f.key];
+      if (f.kind === 'confirm') { if (v !== true) bad(f.key, 'Tick the confirmation.'); return; }
+      v = String(v == null ? '' : v).trim();
+      if (!v) { if (f.req !== false) bad(f.key, f.label + ': required.'); return; }
+      if (f.kind === 'whole' && !/^[0-9]{1,3}$/.test(v)) bad(f.key, f.label + ': enter a whole number, e.g. 25.');
+      if (f.kind === 'time' && !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(v)) bad(f.key, f.label + ': enter a time, e.g. 08:10.');
+    });
+    var missing = P.def.items.filter(function (it) { return !d.items[it[0]]; }).map(function (it) { return it[0]; });
+    if (missing.length) bad('items', 'Rate every item (missing: ' + missing.join(', ') + ').');
+    var weak = weakItems();
+    if (weak.length && !String(d.comments || '').trim()) bad('comments', 'Add a comment or evidence for every Partly or No (' + weak.join(', ') + ').');
+    if (!d.urgent) bad('urgent', 'Say whether there is an urgent issue for the Director of Training.');
+    if (d.urgent === 'Yes' && !String(d.urgentText || '').trim()) bad('urgentText', 'Describe the urgent issue.');
+    return out;
+  }
+  function showProblems(list, scroll) {
+    each($('pBody').querySelectorAll('.bad'), function (el) { el.classList.remove('bad'); });
+    if (!list.length) { msg('pMsg', '', ''); return; }
+    list.forEach(function (p) {
+      if (p.key === 'items') P.def.items.forEach(function (it) { if (!P.data.items[it[0]]) { var r = $('it_' + it[0].replace('.', '_')); if (r) r.classList.add('bad'); } });
+      var w = $('w_' + p.key); if (w) w.classList.add('bad');
+    });
+    $('pMsg').innerHTML = '<div class="msg err"><b>Not sent yet – ' + list.length + (list.length === 1 ? ' thing' : ' things') + ' to finish:</b><ul>' +
+      list.map(function (p) { return '<li>' + esc(p.message) + '</li>'; }).join('') + '</ul></div>';
+    if (scroll) { var first = $('pBody').querySelector('.bad'); if (first) first.scrollIntoView({ block: 'center' }); }
+  }
+
+  $('pSend').onclick = function () {
+    if (!P || S.busy) return;
+    var list = problems();
+    P.showAll = true;
+    if (list.length) return showProblems(list, true);
+    S.busy = true;
+    $('pSend').disabled = true; $('pSend').textContent = 'Sending…';
+    var p = P;
+    call('monSubmit', [S.cluster, S.pin, S.day, p.def.id, p.data, S.name], function (r) {
+      S.busy = false;
+      if (!r || !r.ok) {
+        $('pSend').disabled = false; $('pSend').textContent = p.sent ? 'Send the corrected ' + p.def.short + ' part' : 'Send the ' + p.def.short + ' part';
+        if (r && r.problems) return showProblems(r.problems, true);
+        return msg('pMsg', 'err', 'Not sent: ' + ((r && r.message) || 'try again.') + ' Your answers are kept on this phone.');
+      }
+      store(draftKey(p.def.id), '');
+      S.parts[p.def.id] = r.part;
+      var note = p.def.name + ' sent at ' + r.part.at + '.';
+      var kind = 'ok';
+      if (r.emailed === 'Sent') note += ' The Director of Training has been emailed about the urgent issue.';
+      else if (r.emailed) { kind = 'warn'; note += ' The urgent issue is recorded, but the email to the Director could not be sent (' + r.emailed + '). Phone the Director of Training.'; }
+      backToMain();
+      msg('flash', kind, note);
+    }, function (e) {
+      S.busy = false;
+      $('pSend').disabled = false; $('pSend').textContent = p.sent ? 'Send the corrected ' + p.def.short + ' part' : 'Send the ' + p.def.short + ' part';
+      msg('pMsg', 'err', 'Not sent: ' + e + ' Your answers are kept on this phone – try again when you have a connection.');
+    });
+  };
+
+  function backToMain() {
+    if (!P) return;
+    var pushed = P.pushed;
+    P = null;
+    $('part').classList.add('hidden'); $('main').classList.remove('hidden');
+    msg('pMsg', '', '');
+    renderMain();
+    window.scrollTo(0, 0);
+    if (pushed) { try { history.replaceState(null, ''); } catch (e) { /* ignore */ } }
+  }
+  $('pBack').onclick = function (ev) { ev.preventDefault(); if (P && P.pushed) history.back(); else backToMain(); };
+  window.addEventListener('popstate', function () { if (P) { P.pushed = false; backToMain(); } });
+})();
+</script>
+</body>
+</html>
